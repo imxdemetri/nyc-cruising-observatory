@@ -19,8 +19,8 @@ keywords:
   - open-data
 license: MIT
 license-url: "https://opensource.org/licenses/MIT"
-repository-code: "https://github.com/<org>/nyc-cruising-observatory"
-url: "https://github.com/<org>/nyc-cruising-observatory"
+repository-code: "https://github.com/imxdemetri/nyc-cruising-observatory"
+url: "https://github.com/imxdemetri/nyc-cruising-observatory"
 date-released: "2026-04-24"
 version: "0.0.0-skeleton"
 preferred-citation:
@@ -30,4 +30,4 @@ preferred-citation:
     - family-names: "Cruising Observatory contributors"
       given-names: "NYC"
   year: 2026
-  url: "https://github.com/<org>/nyc-cruising-observatory"
+  url: "https://github.com/imxdemetri/nyc-cruising-observatory"
