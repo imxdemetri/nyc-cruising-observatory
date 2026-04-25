@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: "NYC Cruising Observatory"
+message: "If you use this study or its data products, please cite as below."
+type: dataset
+authors:
+  - family-names: "Cruising Observatory contributors"
+    given-names: "NYC"
+abstract: >-
+  An open observatory for measuring the cost of cruising for parking in
+  New York City, built on top of the Ekstra Observation API. Aggregated,
+  privacy-preserving vehicle-track data from public DOT cameras is used
+  to estimate cruising volume, distribution, and cost across neighborhoods
+  and time-of-day.
+keywords:
+  - parking
+  - cruising
+  - urban-mobility
+  - new-york-city
+  - open-data
+license: MIT
+license-url: "https://opensource.org/licenses/MIT"
+repository-code: "https://github.com/<org>/nyc-cruising-observatory"
+url: "https://github.com/<org>/nyc-cruising-observatory"
+date-released: "2026-04-24"
+version: "0.0.0-skeleton"
+preferred-citation:
+  type: dataset
+  title: "NYC Cruising Observatory"
+  authors:
+    - family-names: "Cruising Observatory contributors"
+      given-names: "NYC"
+  year: 2026
+  url: "https://github.com/<org>/nyc-cruising-observatory"
