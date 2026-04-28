@@ -1,4 +1,4 @@
-# Methodology — NYC Cruising Observatory
+# Methodology: NYC Cruising Observatory
 
 **Version:** 1.0
 **Date:** 2026-04-27
@@ -14,15 +14,15 @@
 
 What fraction of curb-front vehicle traffic in New York City is composed of vehicles cruising for an on-street parking space, and how does that fraction vary by neighbourhood, time of day, day of week, and adjacent off-street garage availability?
 
-The study estimates a **cruising rate** — the fraction of camera passes that recur within a defined time window with a matching coarse appearance signature — at three nested levels of aggregation: camera-hour, corridor-day, and neighbourhood-week. From the cruising rate, in conjunction with NYC DOT vehicle counts and local meter occupancy data, we derive corollary quantities (driver-hours of excess travel, vehicle-miles of excess travel, fuel-equivalent excess emissions) at neighbourhood-week granularity.
+The study estimates a **cruising rate** (the fraction of camera passes that recur within a defined time window with a matching coarse appearance signature) at three nested levels of aggregation: camera-hour, corridor-day, and neighbourhood-week. From the cruising rate, in conjunction with NYC DOT vehicle counts and local meter occupancy data, we derive corollary quantities (driver-hours of excess travel, vehicle-miles of excess travel, fuel-equivalent excess emissions) at neighbourhood-week granularity.
 
 ### 1.2 Motivation
 
 Three published cruising studies anchor the field:
 
-1. Shoup (1995, 2006) used direct block-walk observation in 15 international study sites. The widely cited figure — that cruising accounts for roughly 30% of urban downtown traffic — derives from this small-sample, hand-counted method.
+1. Shoup (1995, 2006) used direct block-walk observation in 15 international study sites. The widely cited figure (that cruising accounts for roughly 30% of urban downtown traffic) derives from this small-sample, hand-counted method.
 2. Hampshire & Shoup (2018) re-estimated cruising in central Stuttgart using TomTom connected-vehicle GPS traces, classifying trips as cruising when the matched path materially exceeded the shortest path within a destination buffer.
-3. Weinberger, Millard-Ball & Hampshire (2020) extended the trajectory approach with a GPS-trace methodology for distinguishing parking-search excess travel from baseline trip patterns. The methodology is implemented in the open-source *Cruise Detector* codebase (FHWA), whose published thresholds — `(matchdist − netwkdist) > 5 m`, `max_dist ≤ 1400 m`, and `frc_inbuffer > 0.5` — operationalise the classification. The peer-reviewed paper carries three authors; the codebase carries additional contributors. This work remains the methodological reference point for trajectory-based cruising estimation.
+3. Weinberger, Millard-Ball & Hampshire (2020) extended the trajectory approach with a GPS-trace methodology for distinguishing parking-search excess travel from baseline trip patterns. The methodology is implemented in the open-source *Cruise Detector* codebase (FHWA), whose published thresholds (`(matchdist − netwkdist) > 5 m`, `max_dist ≤ 1400 m`, and `frc_inbuffer > 0.5`) operationalise the classification. The peer-reviewed paper carries three authors; the codebase carries additional contributors. This work remains the methodological reference point for trajectory-based cruising estimation.
 
 Each prior method has a known coverage limitation: block-walk observation does not scale beyond a handful of study blocks; connected-vehicle data covers only the subset of the fleet that subscribes to the underlying telematics product; and both methods are blind to vehicles whose trajectories never touch a study block or instrumented vehicle. As a result, published city-wide cruising figures rest on extrapolations from samples that are demonstrably non-representative of the full vehicle population.
 
@@ -30,7 +30,7 @@ The NYC DOT operates a network of 943 public traffic cameras with continuous pub
 
 ### 1.3 Scope and contribution
 
-The study is descriptive and observational. It does not attempt to evaluate a parking-policy intervention. Its contribution is methodological — to establish a third, sensor-network-based estimator of cruising, with characterised confounds and validation, that can be cross-referenced against the existing block-walk and trajectory literatures.
+The study is descriptive and observational. It does not attempt to evaluate a parking-policy intervention. Its contribution is methodological: it establishes a third, sensor-network-based estimator of cruising, with characterised confounds and validation, that can be cross-referenced against the existing block-walk and trajectory literatures.
 
 ---
 
@@ -50,7 +50,7 @@ If the Week 1 coverage audit (§5.5) reveals that camera support is insufficient
 
 ---
 
-## 3. Cruising signal — operational definition
+## 3. Cruising signal: operational definition
 
 ### 3.1 The two-window construction
 
@@ -65,13 +65,13 @@ All published rates use the signal window; the capture window exists to enable s
 
 ### 3.2 Justification for the signal-window bracket
 
-The published cruising-for-parking literature does not use a same-camera reappearance time window as a unit of analysis. The block-walk method (Shoup) yields per-trip cruise duration, not a same-station gap. The connected-vehicle methods (Hampshire & Shoup; Weinberger, Millard-Ball et al.) classify trajectories by route excess, not by reappearance time. The 1400 m maximum-distance threshold in Cruise Detector implies an upper bound on plausible single-trip excess travel — at urban average speeds of ~25 km/h, roughly three minutes of excess driving — but this distance threshold does not directly translate into a same-camera reappearance gap, because reappearance time depends on loop geometry rather than total excess distance. The bracket is therefore justified by physical reasoning and empirical signal characterisation, not by direct citation.
+The published cruising-for-parking literature does not use a same-camera reappearance time window as a unit of analysis. The block-walk method (Shoup) yields per-trip cruise duration, not a same-station gap. The connected-vehicle methods (Hampshire & Shoup; Weinberger, Millard-Ball et al.) classify trajectories by route excess, not by reappearance time. The 1400 m maximum-distance threshold in Cruise Detector implies an upper bound on plausible single-trip excess travel (at urban average speeds of ~25 km/h, roughly three minutes of excess driving), but this distance threshold does not directly translate into a same-camera reappearance gap, because reappearance time depends on loop geometry rather than total excess distance. The bracket is therefore justified by physical reasoning and empirical signal characterisation, not by direct citation.
 
 **Lower bound (W_min = 120 s).** A Manhattan single-block loop has a perimeter of approximately 660 m (typical north-south block ≈ 80 m, east-west avenue block ≈ 250 m). At 15 mph (≈ 6.7 m/s) pure driving time is ≈ 98 s; adding two right-turn delays and a partial traffic-signal cycle (≈ 20 s each) brings the floor to approximately 150 s. A 120 s lower bound therefore admits the fastest plausible single-block circling. The bound is also chosen to lie a factor of four above the typical interval at which the ByteTrack tracker drops and reacquires a track-id (sub-30 s), excluding tracker-artefact reappearances by construction.
 
-**Upper bound (W_max = 480 s).** Beyond eight minutes the conditional probability that two same-camera, same-signature observations are part of one continuous cruising session falls below the probability that one of them is a separate trip — an errand, a passenger drop-off, a return leg. Shoup's reported median cruise durations in dense urban areas sit at the upper end of single-digit minutes, so an eight-minute ceiling admits the bulk of plausible cruising while limiting errand contamination.
+**Upper bound (W_max = 480 s).** Beyond eight minutes the conditional probability that two same-camera, same-signature observations are part of one continuous cruising session falls below the probability that one of them is a separate trip (an errand, a passenger drop-off, a return leg). Shoup's reported median cruise durations in dense urban areas sit at the upper end of single-digit minutes, so an eight-minute ceiling admits the bulk of plausible cruising while limiting errand contamination.
 
-**Empirical context.** A 24-hour instrument-shakedown probe on 2026-04-27 (`scratch/gap_distribution_probe.py`) yielded 9,644 deduplicated same-camera, same-signature reappearance pairs in the [60, 600] s capture window. Normalised to a 30-second-equivalent rate, every band in the histogram falls in the 5–6% range. The distribution is essentially uniform — there is no empirical elbow that would identify a natural cut point. A flat distribution is consistent with a population that mixes tracker artefacts at the low end, signature-collision concurrent vehicles uniformly across time, and actual cruising whose density-versus-time is unknown. The empirical histogram alone therefore cannot identify a defensible cut; the cut is set by the physical reasoning above and the resulting choice is treated as an open question for external review (§10.6).
+**Empirical context.** A 24-hour instrument-shakedown probe on 2026-04-27 (`scratch/gap_distribution_probe.py`) yielded 9,644 deduplicated same-camera, same-signature reappearance pairs in the [60, 600] s capture window. Normalised to a 30-second-equivalent rate, every band in the histogram falls in the 5–6% range. The distribution is essentially uniform. There is no empirical elbow that would identify a natural cut point. A flat distribution is consistent with a population that mixes tracker artefacts at the low end, signature-collision concurrent vehicles uniformly across time, and actual cruising whose density-versus-time is unknown. The empirical histogram alone therefore cannot identify a defensible cut; the cut is set by the physical reasoning above and the resulting choice is treated as an open question for external review (§10.6).
 
 ### 3.3 Signal-rate construction
 
@@ -101,7 +101,7 @@ The Ekstra appearance signature (signature_version `s_v1`, locked Option A in `E
 
 The serialised form is an 8-character hex string: `ah_{color:02x}{size:01x}{dwell:01x}` (the `ah_` prefix denotes "appearance hash"). Example: `ah_a4s5d2`.
 
-The total information content is 8 + 3 + 2 = 13 bits, partitioning the per-camera vehicle population into approximately 8,000 distinct signature buckets — sufficient to support same-camera reappearance detection while remaining well below thresholds that could be construed as biometric or vehicle-identifying.
+The total information content is 8 + 3 + 2 = 13 bits, partitioning the per-camera vehicle population into approximately 8,000 distinct signature buckets, sufficient to support same-camera reappearance detection while remaining well below thresholds that could be construed as biometric or vehicle-identifying.
 
 ### 4.2 Per-camera scope
 
@@ -125,7 +125,7 @@ The candidate camera frame is the NYC DOT public traffic-camera network (`https:
 
 ### 5.2 Calibration-tier reality
 
-The Ekstra perception pipeline supports three calibration tiers — `calibrated`, `approximate`, and `uncalibrated` — corresponding to whether a camera has a homography that places detections in real-world coordinates with verified accuracy, a coarse homography from a single annotated reference frame, or no homography at all. As of 2026-04-27, **all 72 cameras currently active in the Ekstra ingest run at tier `approximate`.** No NYC DOT camera in the active set has a verified-accuracy calibration. The full study sample therefore uses `approximate`-tier data uniformly, and the statistical methodology (§7) and limitations (§10) are framed accordingly.
+The Ekstra perception pipeline supports three calibration tiers (`calibrated`, `approximate`, and `uncalibrated`) corresponding to whether a camera has a homography that places detections in real-world coordinates with verified accuracy, a coarse homography from a single annotated reference frame, or no homography at all. As of 2026-04-27, **all 72 cameras currently active in the Ekstra ingest run at tier `approximate`.** No NYC DOT camera in the active set has a verified-accuracy calibration. The full study sample therefore uses `approximate`-tier data uniformly, and the statistical methodology (§7) and limitations (§10) are framed accordingly.
 
 The original methodology placeholder anticipated a tier-mixed analysis with a Week 1 coverage gate that required at least one `calibrated` camera. That gate cannot be satisfied with the current camera fleet, and the study has been re-scoped to operate within `approximate`-tier data only. Calibration-tier-aware confidence remains a future-work direction; it is not a precondition for the present study.
 
@@ -140,7 +140,7 @@ Cameras are assigned a `scene_class` by the Space Engine. The classes relevant t
 | Residential-street cameras | scene_class = `residential_street` | Background stratum; cruising rate expected to be low; serves as a negative control for H1 |
 | Civic-corridor cameras | scene_class = `civic_corridor` | Excluded from H1–H3; reserved for H4 cost aggregation if NTA support requires |
 
-Within each stratum, sampling is exhaustive — every camera in the active Ekstra ingest with the appropriate scene_class is included. The study does not down-sample within stratum.
+Within each stratum, sampling is exhaustive: every camera in the active Ekstra ingest with the appropriate scene_class is included. The study does not down-sample within stratum.
 
 ### 5.4 Geographic representativeness
 
@@ -170,7 +170,7 @@ The full pipeline from sensor to published rate proceeds in seven stages:
 
 1. **Camera ingest.** The Ekstra `camera_rtsp` provider opens an HLS stream from each NYC DOT camera in the active set, decodes frames at a configurable rate (typically 5–10 fps), and emits Motion Packets to the runtime daemon.
 2. **Detection and tracking.** The Ekstra Space Engine runs a stock YOLOv8s vehicle detector exported to ONNX, with a nighttime-enhancement preprocessing stage, on each decoded frame. Detection classes follow the COCO 80-class taxonomy and are restricted at use to the vehicle subset (`car`, `truck`, `bus`, `motorcycle`). ByteTrack associates frame-level detections into per-camera vehicle tracks. Each track carries a `track_id`, `first_seen_ts`, `last_seen_ts`, frame-by-frame bounding boxes, and a per-track classification. The full perception-stack specification is in `EKSTRA_SPACE_ENGINE.md`.
-3. **Track persistence.** When a track terminates and meets the `MIN_FRAMES_TO_PUBLISH` floor, the Space Engine worker (build-id `space_engine_worker_v1`) constructs a track payload — bbox-centroid summary, classification, first/last seen timestamps — and posts it to the platform API. Each track row carries a `source` field stamped by the worker; this provenance column is required by `DATA_INTEGRITY_RULES` Rule 1 and is materialised in production by migration V25 (deployed 2026-04-27).
+3. **Track persistence.** When a track terminates and meets the `MIN_FRAMES_TO_PUBLISH` floor, the Space Engine worker (build-id `space_engine_worker_v1`) constructs a track payload (bbox-centroid summary, classification, first/last seen timestamps) and posts it to the platform API. Each track row carries a `source` field stamped by the worker; this provenance column is required by `DATA_INTEGRITY_RULES` Rule 1 and is materialised in production by migration V25 (deployed 2026-04-27).
 4. **Signature computation.** At track-publish time, the worker computes the appearance signature (§4) over the buffered frames and writes it to the `appearance_signature` column on the track row.
 5. **Reappearance detection.** The platform API exposes a same-camera, same-signature pair query (`GET /api/v1/observations/{cam}/reappearances`, `EKSTRA_OBSERVATION_API.md` §4). At consumer query time, all pairs within the configured window are returned along with a per-camera estimated collision rate.
 6. **Validation-frame archival.** A bounded subset of cameras (the `archival_targets.json` allowlist, currently nine cameras drawn from the active 72) writes a pinned frame to `validation_frames` at every track-start and track-end. These frames are retained for 14 days, are not redistributed, are not used for model training, and exist solely to support the manual labelling protocol of §9. Validation-frame archival is not a default capability and is automatically removed at the end of the formal study window (`EKSTRA_OBSERVATION_API.md` §12).
@@ -204,7 +204,7 @@ Every published rate is reported as both raw and adjusted (§3.3). The adjusted 
 
 The 24-hour instrument shakedown of 2026-04-27 produced 9,644 deduplicated reappearance pairs from the validation-frame archive. The validation-frame archival worker rotates among the nine archival-target cameras with one camera active at a time, so the shakedown throughput is approximately one-ninth of what continuous nine-camera capture would yield, and a small fraction of the throughput from the full active set. The formal study runs against the full active set (currently 72 cameras at `approximate` tier) without rotation, so the per-window pair count in the formal sample is expected to be substantially higher than the shakedown total. A direct linear extrapolation from the shakedown to a four-week formal-window pair count is therefore not warranted; the formal-window population is measured at the Week 1 gate (§5.5) rather than projected from the shakedown.
 
-Power analysis is preliminary. The realised pair count, distribution across cameras, and inter-camera variance are observed at Week 1, and the final analysis lock — with finalised hypothesis-test specifications, sample-size confirmation, and pre-registered decision rules — is registered before any H1–H4 test is executed on Week 2 or later data. If realised power is insufficient for any specific hypothesis at the planned granularity, that hypothesis is reported as under-powered rather than tested. H2 power is camera-coverage-bound rather than pair-count-bound; H4 power depends on inter-NTA variance and is reported as a sensitivity in the published results.
+Power analysis is preliminary. The realised pair count, distribution across cameras, and inter-camera variance are observed at Week 1, and the final analysis lock (with finalised hypothesis-test specifications, sample-size confirmation, and pre-registered decision rules) is registered before any H1–H4 test is executed on Week 2 or later data. If realised power is insufficient for any specific hypothesis at the planned granularity, that hypothesis is reported as under-powered rather than tested. H2 power is camera-coverage-bound rather than pair-count-bound; H4 power depends on inter-NTA variance and is reported as a sensitivity in the published results.
 
 ### 7.2 Confidence intervals
 
@@ -286,11 +286,11 @@ The total label budget is n = 100 events drawn from the in-window population (es
 
 ### 9.3 Expansion trigger
 
-If after the initial n = 100 label run, any per-bucket same-vehicle rate has a 95% CI that overlaps with the 95% CI of an adjacent bucket, the label budget is expanded to n = 200 with the additional 100 events stratified identically. This trigger is operational and is not contingent on the result of the labelling — it is decided in advance by the CI-overlap criterion alone.
+If after the initial n = 100 label run, any per-bucket same-vehicle rate has a 95% CI that overlaps with the 95% CI of an adjacent bucket, the label budget is expanded to n = 200 with the additional 100 events stratified identically. This trigger is operational and is not contingent on the result of the labelling. It is decided in advance by the CI-overlap criterion alone.
 
 ### 9.4 Validation-frame retention
 
-`validation_frames` are retained for 14 days and are removed at the end of the formal study window (`EKSTRA_OBSERVATION_API.md` §12). They are operator-only-authenticated, are not redistributed, are not used for model training, and are not exposed via any public API surface. The labelled outputs (`validation_labels`) are retained beyond the frame TTL but contain no image data — only the rater's verdict, confidence, and notable-confound flag.
+`validation_frames` are retained for 14 days and are removed at the end of the formal study window (`EKSTRA_OBSERVATION_API.md` §12). They are operator-only-authenticated, are not redistributed, are not used for model training, and are not exposed via any public API surface. The labelled outputs (`validation_labels`) are retained beyond the frame TTL but contain no image data: only the rater's verdict, confidence, and notable-confound flag.
 
 ### 9.5 Feed into expected_collision_rate
 
@@ -312,11 +312,11 @@ The labelled set produces an empirical per-camera estimate of the same-vehicle r
 
 **10.6 Open methodological questions for external review.** Three questions are pre-registered as open and are reported alongside the headline results:
 
-- *Q1 — Is [120, 480] s a defensible signal-window bracket for an observational camera study?* Tighter or wider brackets are technically feasible and we will report the [60, 600] s capture-window result as a sensitivity.
-- *Q2 — How should the FHV-idling versus parking-cruising attribution be made?* The study reports both attributed and un-attributed rates and treats this as a question for the field rather than a settled answer.
-- *Q3 — Is the cruising rate, as defined here, a valid lower-bound estimator of true cruising volume?* The same-camera reappearance criterion misses cruising vehicles that do not pass the same camera twice within the window; the study reports its rate as a defensible lower bound rather than a point estimate of true cruising.
+- *Q1. Is [120, 480] s a defensible signal-window bracket for an observational camera study?* Tighter or wider brackets are technically feasible and we will report the [60, 600] s capture-window result as a sensitivity.
+- *Q2. How should the FHV-idling versus parking-cruising attribution be made?* The study reports both attributed and un-attributed rates and treats this as a question for the field rather than a settled answer.
+- *Q3. Is the cruising rate, as defined here, a valid lower-bound estimator of true cruising volume?* The same-camera reappearance criterion misses cruising vehicles that do not pass the same camera twice within the window; the study reports its rate as a defensible lower bound rather than a point estimate of true cruising.
 
-**10.7 Temporal coverage.** The formal study window is four weeks. Seasonal variation in cruising — particularly between summer street-fair conditions, autumn weekday baseline, and winter snow-affected conditions — is not addressed within a single study window. Multi-season replication is reserved for a follow-up.
+**10.7 Temporal coverage.** The formal study window is four weeks. Seasonal variation in cruising (particularly between summer street-fair conditions, autumn weekday baseline, and winter snow-affected conditions) is not addressed within a single study window. Multi-season replication is reserved for a follow-up.
 
 **10.8 Single-city scope.** The methodology is developed for New York City. Translating it to other cities requires re-fitting the signature collision-rate model, re-stratifying the camera scene-class assignments, and re-evaluating the W_min/W_max physical reasoning against local block geometry.
 
@@ -349,7 +349,7 @@ This methodology page is itself versioned (CITATION.cff). Substantive methodolog
 
 ### 11.5 Consumer-cache requirement
 
-Per `EKSTRA_OBSERVATION_API.md` §7.2, the Ekstra Observation API enforces a 72-hour rolling retention on raw track data. Studies whose analytic windows exceed 72 hours — including the present study — are required to maintain a consumer-side cache of API responses, with timestamps and full request provenance, for the duration of the study window. The NYC Cruising Observatory study maintains this cache; it is the canonical record for the published results and is preserved beyond the API's own retention window.
+Per `EKSTRA_OBSERVATION_API.md` §7.2, the Ekstra Observation API enforces a 72-hour rolling retention on raw track data. Studies whose analytic windows exceed 72 hours (including the present study) are required to maintain a consumer-side cache of API responses, with timestamps and full request provenance, for the duration of the study window. The NYC Cruising Observatory study maintains this cache; it is the canonical record for the published results and is preserved beyond the API's own retention window.
 
 ---
 
@@ -361,7 +361,7 @@ The study handles only the Ekstra Observation API and the bounded validation-fra
 
 ### 12.2 Signature is not biometric
 
-The 13-bit appearance signature (§4) is, by construction, far below thresholds that could be construed as biometric or vehicle-identifying. The information content is 13 bits, partitioning the per-camera vehicle population into approximately 8,000 distinct signature buckets — sufficient to estimate same-camera reappearance under heavy aggregation, insufficient to identify a vehicle. The signature is not a plate read, not a face vector, not an OSNet ReID embedding, and is non-reversible.
+The 13-bit appearance signature (§4) is, by construction, far below thresholds that could be construed as biometric or vehicle-identifying. The information content is 13 bits, partitioning the per-camera vehicle population into approximately 8,000 distinct signature buckets, sufficient to estimate same-camera reappearance under heavy aggregation, insufficient to identify a vehicle. The signature is not a plate read, not a face vector, not an OSNet ReID embedding, and is non-reversible.
 
 ### 12.3 Aggregation thresholds
 
@@ -406,4 +406,4 @@ Shoup, D. (1995). An opportunity to reduce minimum parking requirements. *Journa
 
 Shoup, D. (2006). Cruising for parking. *Transport Policy*, 13(6), 479–486.
 
-— end methodology —
+*end methodology*
