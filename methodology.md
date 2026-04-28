@@ -1,7 +1,7 @@
 # Methodology: NYC Cruising Observatory
 
-**Version:** 1.0
-**Date:** 2026-04-27
+**Version:** 1.1
+**Date:** 2026-04-28
 **Study site:** New York City
 **Instrument:** Ekstra Observation API (rev 2, 2026-04-24)
 **Companion documents:** `EKSTRA_OBSERVATION_API.md` (instrument specification); `scratch/wmin_reconciliation_memo.md` (signal-window decision record); `scratch/save_v1_validation_review.py` (manual labelling protocol).
@@ -85,6 +85,10 @@ The raw rate over-counts cruising because two unrelated vehicles that happen to 
 
 All published cruising rates are adjusted rates. Both the raw and adjusted values, the value of `c` used, and the version of the signature used are emitted with every API response (`EKSTRA_OBSERVATION_API.md` §4); the publication products in `data/` carry the same provenance.
 
+### 3.4 Cruising-relevance restriction
+
+The v1 study restricts the cruising signal to reappearance pairs where both tracks are classified as `passing`. Empirical analysis of the 24-hour shakedown found that 86.7% of unadjusted reappearance pairs in the signal window are `parked → parked`, which reflects parking-turnover (one vehicle vacating a curb position, and a different vehicle taking that position 2 to 8 minutes later) rather than cruising-for-parking. The 13-bit appearance signature is insufficiently fine-grained to distinguish same-vehicle re-pass from same-spot-different-vehicle parking turnover at this confound rate. Restricting to passing-to-passing pairs reduces the population to approximately 7.1% of the unadjusted total but isolates the cruising-relevant signal by construction. The headline cruising rate, the validation labelling protocol (§9), and all derived corollary quantities are computed on the passing-to-passing population only. The other reappearance combinations (`parked → parked`, `passing → parked`, `parked → passing`) are reported separately as parking-turnover and parking-event rates rather than as components of the cruising signal.
+
 ---
 
 ## 4. Appearance signature
@@ -113,7 +117,7 @@ The signature is, by construction, not a plate read, not a face vector, not an O
 
 ### 4.4 Expected collision rate
 
-Two unrelated vehicles passing the same camera within the signal window will share a signature with probability `c`. For `s_v1`, the per-camera expected `c` lies in the range 3–8% in the empirical instrument data, varying with camera-specific colour/size distributions of local fleets. Each API response carries a per-camera estimated `c` derived from a rolling background distribution (`EKSTRA_OBSERVATION_API.md` §3.5). The validation methodology in §9 uses a manually labelled stratified sample to confirm or correct the estimated `c`.
+Two unrelated vehicles passing the same camera within the signal window will share a signature with probability `c`. The value of `c` is empirically estimated from the production camera population rather than derived from the theoretical signature-bucket cardinality alone, because the realised `c` depends on the local colour and size distribution of vehicles at each camera (a camera dominated by yellow taxis or by white delivery vans concentrates probability mass in a small number of buckets, raising `c` materially above the uniform-bucket expectation). For `s_v1`, the per-camera empirical `c` lies in the range 3–8% in the instrument data, varying with camera-specific colour and size distributions of local fleets. Each API response carries a per-camera estimated `c` derived from a rolling background distribution (`EKSTRA_OBSERVATION_API.md` §3.5). The validation methodology in §9 uses a manually labelled stratified sample to confirm or correct the estimated `c`. The v1 publication will report the empirical collision rate measured directly against the formal-window distribution, with 95% confidence intervals constructed by the §7.2 clustered bootstrap.
 
 ---
 
@@ -125,7 +129,11 @@ The candidate camera frame is the NYC DOT public traffic-camera network (`https:
 
 ### 5.2 Calibration-tier reality
 
-The Ekstra perception pipeline supports three calibration tiers (`calibrated`, `approximate`, and `uncalibrated`) corresponding to whether a camera has a homography that places detections in real-world coordinates with verified accuracy, a coarse homography from a single annotated reference frame, or no homography at all. As of 2026-04-27, **all 72 cameras currently active in the Ekstra ingest run at tier `approximate`.** No NYC DOT camera in the active set has a verified-accuracy calibration. The full study sample therefore uses `approximate`-tier data uniformly, and the statistical methodology (§7) and limitations (§10) are framed accordingly.
+The Ekstra perception pipeline defines three calibration tiers (`calibrated`, `approximate`, and `uncalibrated`) in the `camera_calibrations` schema. As of 2026-04-28, **all 72 cameras currently active in the Ekstra ingest run at tier `approximate`.** No NYC DOT camera in the active set has been promoted to `calibrated`; that tier is defined but not yet populated by any production write path. The full study sample therefore uses `approximate`-tier data uniformly, and the statistical methodology (§7) and limitations (§10) are framed accordingly.
+
+The `approximate` tier as currently populated reflects four ingredients per camera: (i) camera GPS coordinates from NYC DOT metadata, (ii) a name-parsed dominant direction (the camera name "10 Ave @ 23 St" is parsed to a south-facing orientation by the worker's heuristic), (iii) the US right-hand-driving curb-side convention applied to that direction, and (iv) a city-specific block-length constant (264 ft for typical Manhattan north-south blocks). Two additional ingredients are stored for a minority of cameras: 27% of approximate-tier cameras (204 of 766) have a VLM-derived curb-line polyline stored in pixel space; 15% of active cameras (96 of 658) carry obstacle-anchor proximity tags from the curb_obstacles registry (fire hydrants, bus stops, citibike stations).
+
+The `homography` column on `camera_calibrations` is currently NULL for all 766 approximate-tier rows. The runtime perception worker computes additional self-calibration signals at runtime: vanishing-point estimation from observed vehicle trajectories, ft-per-pixel from car-width priors via the AutoCalibrationService (build-id `space_engine_worker_v1`), and periodic 3x3 homography solves via the HomographyAccumulator on bus-GPS-to-pixel matches. As of methodology v1.1 publication these signals are held in worker memory and are discarded on the 60-minute pipeline reload. Persistence wiring is in development. The `calibrated` tier in the schema is reserved for cameras with a persisted, verified-accuracy homography; no camera has been promoted to it.
 
 The original methodology placeholder anticipated a tier-mixed analysis with a Week 1 coverage gate that required at least one `calibrated` camera. That gate cannot be satisfied with the current camera fleet, and the study has been re-scoped to operate within `approximate`-tier data only. Calibration-tier-aware confidence remains a future-work direction; it is not a precondition for the present study.
 
@@ -258,6 +266,10 @@ The expected collision rate `c` is the principal quantitative confound (§4.4). 
 
 Because the full study sample runs at `approximate` tier (§5.2), tier-related confounds are uniform across the sample and do not contaminate within-sample comparisons. They do affect the absolute scale of any cost-of-cruising estimate (H4), and are reported in the H4 confidence interval as a calibration-uncertainty term.
 
+### 8.6 Parking-turnover with signature collision
+
+The dominant empirical confound to the cruising signal is parking-turnover combined with signature collision: a vehicle vacating a curb position is replaced minutes later by a different vehicle whose 13-bit appearance signature falls in the same bucket. Empirical measurement against the 24-hour shakedown shows this confound accounts for 86.7% of unadjusted reappearance pairs in the signal window (parked-to-parked pairs were 874,079 of 1,005,610 total pairs in the [120, 480] s window with `ah_unknown` excluded). The signature-collision contribution to this share is bounded above by the per-camera collision rate `c` of §4.4 (3 to 8% in the empirical instrument data); the remaining majority of the share is genuine parking-turnover where two different vehicles physically occupied the same curb position at different times. The v1 study's primary mechanism for addressing this confound is the §3.4 restriction to passing-to-passing pairs, which removes parking-turnover by construction at the cost of constraining the study's scope to vehicles in active travel. Future versions may incorporate trajectory-shape similarity (entry and exit edge angles, motion-vector consistency) to refine the cruising signal beyond classification-based filtering.
+
 ---
 
 ## 9. Validation methodology
@@ -319,6 +331,12 @@ The labelled set produces an empirical per-camera estimate of the same-vehicle r
 **10.7 Temporal coverage.** The formal study window is four weeks. Seasonal variation in cruising (particularly between summer street-fair conditions, autumn weekday baseline, and winter snow-affected conditions) is not addressed within a single study window. Multi-season replication is reserved for a follow-up.
 
 **10.8 Single-city scope.** The methodology is developed for New York City. Translating it to other cities requires re-fitting the signature collision-rate model, re-stratifying the camera scene-class assignments, and re-evaluating the W_min/W_max physical reasoning against local block geometry.
+
+**10.9 Cruising-population restricted to passing tracks.** The v1 cruising signal applies only to the passing-track population (§3.4). Total cruising volume is therefore bounded by the accuracy of ByteTrack's `passing` versus `parked` classification. A slowly-circling vehicle that the tracker classifies as parked because of frame-by-frame stationarity below the per-camera threshold would be excluded from the cruising population and would suppress the headline rate at the affected camera. The classification accuracy is characterised against the manually labelled validation set (§9) and is reported as a separate figure alongside the headline rate.
+
+**10.10 Approximate calibration is metadata-derived rather than frame-derived.** The `approximate` calibration tier described in §5.2 is metadata-derived rather than frame-derived for the great majority of cameras. v1 results are therefore camera-relative comparisons (camera-hour vs. camera-hour, corridor-day vs. corridor-day) rather than absolute spatial claims. Quantities expressed in absolute spatial units (queue length in meters, vehicle speed in km/h, cross-camera trajectory reconstruction) are not produced by v1 and are reserved for future versions in which a persisted homography is available for the camera in question.
+
+**10.11 Runtime calibration data not yet persisted.** The runtime perception worker computes calibration data (vanishing point, ft-per-pixel, periodic 3x3 homography solves from bus-GPS matches) that are not currently persisted to the database. v1.2 and later versions of the methodology will incorporate persisted homographies as the persistence wiring lands. v1 absolute-scale uncertainty (H4 in particular) is therefore higher than it will be for subsequent versions; the H4 confidence interval reports a calibration-uncertainty term separate from the bootstrap-based interval, and the term is expected to shrink in v1.2.
 
 ---
 
